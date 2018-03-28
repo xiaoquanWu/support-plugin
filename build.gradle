@@ -6,7 +6,7 @@
  */
 
 group 'com.xiaoquan.gradle.plugin'
-version '1.0'
+version '1.3'
 
 apply plugin: 'java'
 apply plugin: 'groovy'
@@ -16,9 +16,6 @@ apply plugin: 'maven-publish'
 apply plugin: "com.gradle.plugin-publish"
 
 apply plugin: 'com.xiaoquan.gradle.plugin'
-
-apply plugin: 'war'
-
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -56,24 +53,28 @@ buildscript {
     dependencies {
         classpath 'com.gradle:build-scan-plugin:1.12.1'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.10"
-        classpath 'com.xiaoquan.gradle.plugin:support-plugin:1.0'
+        classpath 'com.xiaoquan.gradle.plugin:support-plugin:1.1'
     }
 }
 
-//pluginBundle {
-//    website = 'http://www.gradle.org/'
-//    vcsUrl = 'https://github.com/gradle/gradle'
-//    description = 'Greetings from here!'
-//    tags = ['greetings', 'salutations']
-//
-//    plugins {
-//        supportPlugin {
-//            id = 'com.xiaoquan.gradle.plugin'
-//            displayName = 'test-gradle.plugin'
-//        }
-//    }
-//}
 
+pluginBundle {
+    website = 'https://github.com/xiaoquanWu/support-plugin'
+    vcsUrl = 'https://github.com/xiaoquanWu/support-plugin.git'
+    description = 'gradle test'
+    tags = ['test']
+
+    plugins {
+        supportPlugin {
+            id = 'com.xiaoquan.gradle.plugin'
+            displayName = 'test gradle plugin'
+//            version = "$version"
+        }
+    }
+}
+jar {
+    version = "$version"
+}
 //deployEnv {
 //
 //    QA {}
