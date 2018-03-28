@@ -1,3 +1,4 @@
+import org.gradle.api.AntBuilder
 import org.gradle.api.Task
 import org.gradle.api.internal.project.taskfactory.ITaskFactory
 import org.gradle.api.tasks.Copy
@@ -20,7 +21,27 @@ class App {
         println result
 
 
+
+
     }
+
+
+
+    @Test
+    public void test2() {
+        def project = ProjectBuilder
+                .builder()
+                .withProjectDir(rootDir)
+                .build()
+
+        AntBuilder ant = project.getAnt();
+
+        ant.echo(message: 'xxx')
+        ant.taskdef()
+
+    }
+
+
 
 
     @Test
