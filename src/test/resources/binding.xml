@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<binding name="flights">
+    <mapping name="flights" class="com.xiaoquan.gradle.plugin.model.Flights">
+        <namespace uri="http://test.jibx.org/flight" default="elements"/>
+        <collection field="flightList">
+            <structure map-as="com.xiaoquan.gradle.plugin.model.FlightType" usage="optional"/>
+        </collection>
+    </mapping>
+
+    <mapping name="flight" class="com.xiaoquan.gradle.plugin.model.FlightType">
+        <!--<namespace uri="http://test.jibx.org/flight" default="elements"/>-->
+        <value name="number" field="number" usage="optional" style="attribute"/>
+    </mapping>
+
+    <!--<mapping name="Person" class="com.xiaoquan.gradle.plugin.model.Person">-->
+        <!--<value name="name" field="name" usage="optional" style="attribute"/>-->
+    <!--</mapping>-->
+</binding>

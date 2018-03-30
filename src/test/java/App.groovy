@@ -1,9 +1,14 @@
 import org.gradle.api.AntBuilder
 import org.gradle.api.Task
 import org.gradle.api.internal.project.taskfactory.ITaskFactory
+import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.plugins.ide.idea.model.IdeaModule
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testkit.runner.GradleRunner
+import org.jibx.binding.Compile
 import org.junit.Test
 
 class App {
@@ -15,16 +20,13 @@ class App {
     public void test1() {
         def result = GradleRunner.create().withProjectDir(rootDir)
                 .withDebug(true)
-                .withArguments("build", "--info").build()
+                .withArguments("jibxBind", "--info").build()
 
 
         println result
 
 
-
-
     }
-
 
 
     @Test
@@ -34,14 +36,52 @@ class App {
                 .withProjectDir(rootDir)
                 .build()
 
-        AntBuilder ant = project.getAnt();
+        project.pluginManager.apply 'java'
 
-        ant.echo(message: 'xxx')
-        ant.taskdef()
 
+        project.task("bindTest", dependsOn: ['compileJava']) {
+            HashSet<File> result = new HashSet<File>()
+            result.addAll(project.sourceSets.main.compileClasspath.files)
+            result.addAll(project.sourceSets.main.output.files)
+            result.addAll(project.sourceSets.test.compileClasspath.files)
+            result.addAll(project.sourceSets.test.output.files)
+
+
+            def classPaths = result.toArray() as String[]
+            classPaths = [
+                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx-bind.jar",
+                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx.jar",
+                    "/home/xiaoquan/idea-workspace/support-plugin/extra/joda-time.jar",
+                    "/home/xiaoquan/idea-workspace/support-plugin/build/classes/java/main",
+            ] as String[]
+            def bindings = ['/home/xiaoquan/idea-workspace/support-plugin/src/test/resources/binding.xml'] as String[]
+
+//            classPaths = [
+//                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx-bind.jar",
+//                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx.jar",
+//                    "/home/xiaoquan/idea-workspace/support-plugin/extra/joda-time.jar",
+//                    "/home/xiaoquan/nuke-workspace/git-workspace/go-bookingpipe/build/classes/java/main"
+//            ] as String[]
+//
+//            bindings = ['/home/xiaoquan/nuke-workspace/git-workspace/go-bookingpipe/src/main/java/jibx/message.xml'] as String[]
+
+            Compile compiler = new Compile();
+
+
+            compiler.setLoad(true);
+//        compiler.setSkipValidate(!this.validate);
+            compiler.setVerbose(true);
+//        compiler.setVerify(this.verify);
+            compiler.compile(classPaths, bindings);
+
+        }
+        project.compileJava.finalizedBy(project.bindTest)
+
+
+
+//        project.getDependencies().artifactTypes.each { println it.fileNameExtensions}
+//        project.bindTest.mustRunAfter("build")
     }
-
-
 
 
     @Test
@@ -64,7 +104,7 @@ class App {
 
 
         task.execute()
-        task.getIncludes().each { println it}
+        task.getIncludes().each { println it }
 
 
         println project.getPluginManager().findPlugin("maven")
@@ -73,8 +113,6 @@ class App {
 
 
         println project.getBuildDir().getAbsolutePath()
-
-
 
 
     }

@@ -5,11 +5,13 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 import java.io.File;
 import java.util.SortedSet;
@@ -21,11 +23,14 @@ public class SupportPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getExtensions().create(Nuke_Ext_Name, NukeEnvExtension.class, new EnvDomain("envDomain"));
+        project.getExtensions().create(Nuke_Ext_Name, NukeEnvExtension.class, new EnvDomain("envDomain"), new JibxDomain("jibxDomain"));
         createJavaDirTask(project);
         createWebProject(project);
 
         configEnv(project);
+
+        createJibxBind(project);
+
         logVlue(project);
 
     }
@@ -84,11 +89,39 @@ public class SupportPlugin implements Plugin<Project> {
     }
 
 
+    private void createJibxBind(Project project) {
+        JibxTask jibxBind = project.getTasks().create("jibxBind", JibxTask.class);
+        jibxBind.setGroup(Task_Group_Nuke);
+        jibxBind.setProject(project);
+//        project.getTasks().getByName("jibxBind").dependsOn JavaPlugin.COMPILE_JAVA_TASK_NAME
+        jibxBind.dependsOn(JavaPlugin.COMPILE_JAVA_TASK_NAME, JavaPlugin.COMPILE_TEST_JAVA_TASK_NAME);
+        jibxBind.setClassPathsSupplier(() -> {
+            NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
+            JibxDomain jibx = nukeEnvExtension.getJibx();
+            return jibx.getClassPath();
+        });
+
+        jibxBind.setBindingsSupplier(() -> {
+            NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
+            JibxDomain jibx = nukeEnvExtension.getJibx();
+            return jibx.getBindings();
+        });
+
+
+//        jibxBind.mustRunAfter(JavaPlugin.CLASSES_TASK_NAME);
+//        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(":jibxBind");
+
+//        project.getTasks().getByName("compileJava").finalizedBy("jibxBind");
+
+    }
+
+
     private boolean createIfNotExist(File file) {
         return file.exists() || file.mkdirs();
     }
 
 
+    //------------------------------------------------------------------------------------------------------------------
     private void logVlue(Project project) {
 
         Task logVal = project.getTasks().create("logVal");
@@ -110,14 +143,15 @@ public class SupportPlugin implements Plugin<Project> {
             });
             System.out.println(names);
             System.out.println(sourceSets.getAsMap());
-//            System.out.println(sourceSets.);
+            System.out.println("--sourceSets.getByName------");
             System.out.println(sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getJava().getSrcDirs());
+            System.out.println(sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getJava().getOutputDir());
             System.out.println(sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getResources().getSrcDirs());
             System.out.println(sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME).getJava().getSrcDirs());
             System.out.println(sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME).getResources().getSrcDirs());
 
 
-            FileCollection compileClasspath = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath();
+            FileCollection compileClasspath = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath();
 
             compileClasspath.forEach(file -> System.out.println("compilePath:" + file.getAbsolutePath()));
             FileCollection runtimeClasspath = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().getByName(
@@ -130,22 +164,15 @@ public class SupportPlugin implements Plugin<Project> {
             System.out.println("----------------------------");
 
 
-            Task war = project.getTasks().getByName("war");
-
-            Copy copy = project.getTasks().create("copy", Copy.class);
-
-            war.doFirst((tt) -> {
-
-                copy.from("/home/xiaoquan/idea-workspace/support-plugin/build/tmp/jar/MANIFEST.MF");
-                copy.into("/home/xiaoquan/idea-workspace/support-plugin/build/tmp");
-                copy.execute();
-            });
-
-//            war.dependsOn(copy);
+            System.out.println("------------------------------------Idea plugin---------------------------------------");
 
 
-            System.out.println("war:" + war.getActions().size());
+            IdeaModel ideaModel = (IdeaModel) project.getExtensions().getByName("idea");
 
+//            File outputDir = ideaModel.getModule().getOutputDir();
+
+
+//            System.out.println("ideaModel:" + outputDir.getAbsolutePath());
 
         });
 
