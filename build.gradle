@@ -6,18 +6,18 @@
  */
 
 group 'com.xiaoquan.gradle.plugin'
-version '1.3'
+version '1.4'
 
 apply plugin: 'java'
-apply plugin: 'groovy'
 apply plugin: 'idea'
+apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: "com.gradle.plugin-publish"
 
 //apply plugin: 'war'
-apply plugin: 'com.xiaoquan.gradle.plugin'
+//apply plugin: 'com.xiaoquan.gradle.plugin'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -28,15 +28,23 @@ repositories {
     mavenLocal()
 }
 
+idea {
+    module {
+        inheritOutputDirs = false
+        //for gradle build
+        outputDir = file("build/classes/java/main")
+        testOutputDir = file("build/classes/java/test")
+    }
+}
+
+
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile gradleTestKit()
     compile gradleApi()
     compile group: 'com.google.guava', name: 'guava', version: '23.0'
-//    compile group: 'org.javassist', name: 'javassist', version: '3.22.0-GA'
 
-    compile fileTree(dir: '/home/xiaoquan/idea-workspace/support-plugin/extra', includes: ['*.jar'])
-//    runtime
+    compile fileTree(dir: "${projectDir}/extra", includes: ['*.jar'])
 }
 
 gradlePlugin {
@@ -59,11 +67,9 @@ buildscript {
     dependencies {
         classpath 'com.gradle:build-scan-plugin:1.12.1'
         classpath "com.gradle.publish:plugin-publish-plugin:0.9.10"
-//        classpath group: 'org.javassist', name: 'javassist', version: '3.22.0-GA'
 
-        classpath 'com.xiaoquan.gradle.plugin:support-plugin:1.3'
-//        classpath 'org.jibx:jibx-gradle-plugin:1.2.5'
-        classpath fileTree(dir: "/home/xiaoquan/idea-workspace/support-plugin/extra", includes: ['*.jar'])
+//        classpath 'com.xiaoquan.gradle.plugin:support-plugin:1.4'
+//        classpath fileTree(dir: "${projectDir}/extra", includes: ['*.jar'])
     }
 }
 
@@ -82,34 +88,11 @@ pluginBundle {
         }
     }
 }
+
 jar {
     version = "$version"
 }
 
-nukeEnv {
-//    QA {
-//        configDir = "/home/xiaoquan/idea-workspace/support-plugin/configs"
-//        exclude = ["exclu.properties"]
-//    }
-//
-    jibx {
-        classPath=[
-                "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx-bind.jar",
-                "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx.jar",
-                "/home/xiaoquan/idea-workspace/support-plugin/extra/joda-time.jar",
-                "/home/xiaoquan/idea-workspace/support-plugin/build/classes/java/main"
-        ]
-        bindings=[
-                "/home/xiaoquan/idea-workspace/support-plugin/src/test/resources/binding.xml"
-
-        ]
-
-    }
-
-
-}
-
-//
 
 idea {
     module {
@@ -117,66 +100,8 @@ idea {
         //for gradle build
         outputDir = file("build/classes/java/main")
         testOutputDir = file("build/classes/java/test")
-
-        //for idea build
-//        outputDir = file("classes/production/go-bookingpipe")
-//        testOutputDir = file("classes/test/go-bookingpipe")
     }
 }
-//task bindJibx() {
-//    doFirst {
-//        String path = getLocalClassPath()
-//        if (path != null) {
-//            jibx(path, jibx_path, compile_path)
-//        } else {
-//            throw new GradleException("Not found classes file for bindJibxTask!")
-//        }
-//    }
-//    onlyIf {
-//        isJibxExist()
-//    }
-//    outputs.upToDateWhen { false }
-//}
-//
-//def isJibxExist() {
-//    boolean isJibxExist = file(jibx_path).isDirectory()
-//    if (!isJibxExist) {
-//        println("No jibx directory found at ${jibx_path} !")
-//    }
-//    return isJibxExist
-//}
-//
-//def jibx(String classesPath, String bindingPath, String lib) {
-//    ant.taskdef(name: "bind", classname: "org.jibx.binding.ant.CompileTask") {
-//        classpath {
-//            fileset(dir: lib, includes: "**/*.jar")
-//        }
-//    }
-//    ant.bind(verbose: "true", load: "true") {
-//        bindingfileset(dir: bindingPath)
-//        classpath {
-//            fileset(dir: "extra", includes: "**/*.jar")
-//            pathelement(location: classesPath)
-//        }
-//    }
-//}
-//
-//def getLocalClassPath() {
-//    if (file(idea.module.outputDir.path).isDirectory()) {
-//        return idea.module.outputDir
-//    } else {
-//        println("Not found directory " + idea.module.outputDir.path)
-//        return null
-//    }
-//}
-//
-//compileJava.finalizedBy(bindJibx)
-//
-//task testPath() {
-//    doFirst {
-//        println(getLocalClassPath())
-//    }
-//}
 
 
 

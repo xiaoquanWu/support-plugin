@@ -25,26 +25,8 @@ public class JibxTask extends DefaultTask {
     @TaskAction
     public void compile() {
         try {
-            String[] classPaths = {
-                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx-bind.jar",
-                    "/home/xiaoquan/idea-workspace/support-plugin/extra/jibx.jar",
-                    "/home/xiaoquan/idea-workspace/support-plugin/extra/joda-time.jar",
-                    "/home/xiaoquan/idea-workspace/support-plugin/build/classes/java/main",
-            };
-
-            String[] bindings = {
-                    "/home/xiaoquan/idea-workspace/support-plugin/src/test/resources/binding.xml"
-            };
-
             String[] pathes = classPathsSupplier.get();
             String[] files = bindingsSupplier.get();
-
-
-            Compile compiler = new Compile();
-            compiler.setLoad(this.load);
-            compiler.setVerbose(this.verbose);
-            compiler.compile(pathes, files);
-
 
             project.getLogger().info("---------Jibx ClassPaths---");
             for (String path : pathes) {
@@ -53,9 +35,10 @@ public class JibxTask extends DefaultTask {
             for (String file : files) {
                 project.getLogger().info(file);
             }
-
-
-
+            Compile compiler = new Compile();
+            compiler.setLoad(this.load);
+            compiler.setVerbose(this.verbose);
+            compiler.compile(pathes, files);
         } catch (Exception e) {
             e.printStackTrace();
         }

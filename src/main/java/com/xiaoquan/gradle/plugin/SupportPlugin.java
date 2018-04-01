@@ -1,10 +1,12 @@
 package com.xiaoquan.gradle.plugin;
 
+import com.google.common.collect.Lists;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
@@ -14,7 +16,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 import java.io.File;
-import java.util.SortedSet;
+import java.util.*;
 
 public class SupportPlugin implements Plugin<Project> {
 
@@ -23,12 +25,11 @@ public class SupportPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        project.getPluginManager().apply(JavaBasePlugin.class);
         project.getExtensions().create(Nuke_Ext_Name, NukeEnvExtension.class, new EnvDomain("envDomain"), new JibxDomain("jibxDomain"));
         createJavaDirTask(project);
         createWebProject(project);
-
         configEnv(project);
-
         createJibxBind(project);
 
         logVlue(project);
@@ -91,28 +92,49 @@ public class SupportPlugin implements Plugin<Project> {
 
     private void createJibxBind(Project project) {
         JibxTask jibxBind = project.getTasks().create("jibxBind", JibxTask.class);
+        NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
         jibxBind.setGroup(Task_Group_Nuke);
         jibxBind.setProject(project);
-//        project.getTasks().getByName("jibxBind").dependsOn JavaPlugin.COMPILE_JAVA_TASK_NAME
-        jibxBind.dependsOn(JavaPlugin.COMPILE_JAVA_TASK_NAME, JavaPlugin.COMPILE_TEST_JAVA_TASK_NAME);
+        jibxBind.dependsOn(JavaPlugin.COMPILE_JAVA_TASK_NAME);
         jibxBind.setClassPathsSupplier(() -> {
-            NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
+            project.getLogger().info("Time:" + System.currentTimeMillis());
             JibxDomain jibx = nukeEnvExtension.getJibx();
-            return jibx.getClassPath();
+
+            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+            SourceSetContainer sourceSets = javaConvention.getSourceSets();
+            FileCollection compileClasspath = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath();
+
+            Set<String> classPaths = new HashSet<>();
+
+            compileClasspath.getFiles().forEach(file -> classPaths.add(file.getAbsolutePath()));
+            String[] jibxClassPath = jibx.getClassPath();
+            if (jibxClassPath != null && jibxClassPath.length != 0) {
+                classPaths.addAll(Arrays.asList(jibxClassPath));
+            }
+            classPaths.add(sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getJava().getOutputDir().getAbsolutePath());
+
+
+            String[] jibxRealCompilePaths = new String[classPaths.size()];
+            List<String> _files = Lists.newArrayList(classPaths);
+            for (int i = 0; i < _files.size(); i++) {
+                jibxRealCompilePaths[i] = _files.get(i);
+            }
+            return jibxRealCompilePaths;
         });
 
         jibxBind.setBindingsSupplier(() -> {
-            NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
             JibxDomain jibx = nukeEnvExtension.getJibx();
-            return jibx.getBindings();
+            String[] bindings = jibx.getBindings();
+            for (String binding : bindings) {
+                if (!new File(binding).isFile()) {
+                    throw new IllegalStateException("Illegal binding file.");
+                }
+            }
+            return bindings;
         });
 
-
-//        jibxBind.mustRunAfter(JavaPlugin.CLASSES_TASK_NAME);
-//        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(":jibxBind");
-
-//        project.getTasks().getByName("compileJava").finalizedBy("jibxBind");
-
+        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(jibxBind);
+        jibxBind.getOutputs().upToDateWhen(element -> false);
     }
 
 
@@ -153,12 +175,18 @@ public class SupportPlugin implements Plugin<Project> {
 
             FileCollection compileClasspath = sourceSets.getByName(SourceSet.TEST_SOURCE_SET_NAME).getCompileClasspath();
 
-            compileClasspath.forEach(file -> System.out.println("compilePath:" + file.getAbsolutePath()));
+            compileClasspath.forEach(file -> System.out.println("test compilePath:" + file.getAbsolutePath()));
+
+            FileCollection mainCompileClasspath = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath();
+            mainCompileClasspath.getFiles().forEach(file -> {
+                System.out.println("main compilePath:" + file.getAbsolutePath());
+            });
+
             FileCollection runtimeClasspath = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().getByName(
                     SourceSet.MAIN_SOURCE_SET_NAME).getRuntimeClasspath();
 
             System.out.println("============");
-            runtimeClasspath.getFiles().forEach(file -> System.out.println(file.getAbsolutePath()));
+            runtimeClasspath.getFiles().forEach(file -> System.out.println("runtimePath:" + file.getAbsolutePath()));
             System.out.println(runtimeClasspath.getAsPath());
 
             System.out.println("----------------------------");
