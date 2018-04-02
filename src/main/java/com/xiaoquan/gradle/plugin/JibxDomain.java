@@ -1,5 +1,12 @@
 package com.xiaoquan.gradle.plugin;
 
+import org.gradle.api.file.FileTree;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class JibxDomain {
 
     private String name;
@@ -29,9 +36,9 @@ public class JibxDomain {
         this.bindings = bindings;
     }
 
-    public void setClassPath(String[] classPath) {
-        this.classPath = classPath;
-    }
+//    public void setClassPath(String[] classPath) {
+//        this.classPath = classPath;
+//    }
 
     public boolean isLoad() {
         return load;
@@ -48,4 +55,15 @@ public class JibxDomain {
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
     }
+
+
+    public void setClassPath(FileTree files) {
+        Set<File> fileSet = files.getFiles();
+        String[] classPath = new String[fileSet.size()];
+        List<String> collect = fileSet.stream().map(File::getAbsolutePath).collect(Collectors.toList());
+        collect.toArray(classPath);
+        this.classPath = classPath;
+    }
+
+
 }

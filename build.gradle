@@ -10,7 +10,7 @@ version '1.4'
 
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin: 'groovy'
+//apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'

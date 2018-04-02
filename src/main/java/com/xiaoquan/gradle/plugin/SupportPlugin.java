@@ -13,6 +13,7 @@ import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 import java.io.File;
@@ -95,7 +96,7 @@ public class SupportPlugin implements Plugin<Project> {
         NukeEnvExtension nukeEnvExtension = (NukeEnvExtension) project.getExtensions().getByName(Nuke_Ext_Name);
         jibxBind.setGroup(Task_Group_Nuke);
         jibxBind.setProject(project);
-        jibxBind.dependsOn(JavaPlugin.COMPILE_JAVA_TASK_NAME);
+        jibxBind.dependsOn(JavaPlugin.COMPILE_JAVA_TASK_NAME, JavaPlugin.TEST_CLASSES_TASK_NAME);
         jibxBind.setClassPathsSupplier(() -> {
             project.getLogger().info("Time:" + System.currentTimeMillis());
             JibxDomain jibx = nukeEnvExtension.getJibx();
@@ -133,7 +134,8 @@ public class SupportPlugin implements Plugin<Project> {
             return bindings;
         });
 
-        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(jibxBind);
+//        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(jibxBind);
+        project.getTasks().getByName(LifecycleBasePlugin.BUILD_TASK_NAME).finalizedBy(jibxBind);
         jibxBind.getOutputs().upToDateWhen(element -> false);
     }
 
