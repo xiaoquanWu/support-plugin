@@ -15,7 +15,7 @@ public class JibxDomain {
 
     private boolean verbose = true;
 
-    private String[] classPath;
+    private String[] classPaths;
     private String[] bindings;
 
 
@@ -24,8 +24,8 @@ public class JibxDomain {
     }
 
 
-    public String[] getClassPath() {
-        return classPath;
+    public String[] getClassPaths() {
+        return classPaths;
     }
 
     public String[] getBindings() {
@@ -36,9 +36,6 @@ public class JibxDomain {
         this.bindings = bindings;
     }
 
-//    public void setClassPath(String[] classPath) {
-//        this.classPath = classPath;
-//    }
 
     public boolean isLoad() {
         return load;
@@ -57,12 +54,22 @@ public class JibxDomain {
     }
 
 
-    public void setClassPath(FileTree files) {
-        Set<File> fileSet = files.getFiles();
-        String[] classPath = new String[fileSet.size()];
-        List<String> collect = fileSet.stream().map(File::getAbsolutePath).collect(Collectors.toList());
-        collect.toArray(classPath);
-        this.classPath = classPath;
+    public void setClassPaths(Object files) {
+        if (files instanceof FileTree) {
+            Set<File> fileSet = ((FileTree) files).getFiles();
+            String[] classPaths = new String[fileSet.size()];
+            List<String> collect = fileSet.stream().map(File::getAbsolutePath).collect(Collectors.toList());
+            collect.toArray(classPaths);
+            this.classPaths = classPaths;
+        } else if (files instanceof List) {
+            List<String> fileSet = (List<String>) files;
+            String[] classPaths = new String[fileSet.size()];
+            fileSet.toArray(classPaths);
+            this.classPaths = classPaths;
+        } else {
+            throw new IllegalArgumentException("Invalid classPath parameters");
+        }
+
     }
 
 

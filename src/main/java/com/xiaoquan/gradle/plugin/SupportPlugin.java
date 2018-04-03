@@ -108,7 +108,7 @@ public class SupportPlugin implements Plugin<Project> {
             Set<String> classPaths = new HashSet<>();
 
             compileClasspath.getFiles().forEach(file -> classPaths.add(file.getAbsolutePath()));
-            String[] jibxClassPath = jibx.getClassPath();
+            String[] jibxClassPath = jibx.getClassPaths();
             if (jibxClassPath != null && jibxClassPath.length != 0) {
                 classPaths.addAll(Arrays.asList(jibxClassPath));
             }
@@ -135,7 +135,8 @@ public class SupportPlugin implements Plugin<Project> {
         });
 
 //        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).mustRunAfter(jibxBind);
-        project.getTasks().getByName(LifecycleBasePlugin.BUILD_TASK_NAME).finalizedBy(jibxBind);
+//        project.getTasks().getByName(LifecycleBasePlugin.BUILD_TASK_NAME).finalizedBy(jibxBind);
+        project.getTasks().getByName(JavaPlugin.CLASSES_TASK_NAME).finalizedBy(jibxBind);
         jibxBind.getOutputs().upToDateWhen(element -> false);
     }
 
